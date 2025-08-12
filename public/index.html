@@ -1,0 +1,564 @@
+<!doctype html>
+<html lang="nb" class="h-full">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Bulldøk — Treningsøkter</title>
+    <meta name="description" content="Registrer og administrer treningsøkter for studentenes klatreklubb." />
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script>
+      // Enable dark mode if user prefers
+      if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.documentElement.classList.add('dark')
+      } else {
+        document.documentElement.classList.remove('dark')
+      }
+    </script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: { sans: ['Inter', 'ui-sans-serif', 'system-ui'] },
+            colors: {
+              brand: {
+                50: '#f3faf9', 100: '#d7f3ef', 200: '#b0e7de', 300: '#7fd6c8',
+                400: '#49bfae', 500: '#2aa390', 600: '#1e8274', 700: '#1b665d',
+                800: '#174f49', 900: '#123f3a'
+              }
+            }
+          }
+        },
+        darkMode: 'class'
+      }
+    </script>
+    <style>
+      html, body { height: 100%; }
+      .toggle-registered, .toggle-attended { 
+        width: 1.5rem; height: 1.5rem; border-radius: 0.25rem; 
+        border: 1px solid #d1d5db; display: flex; align-items: center; 
+        justify-content: center; color: #9ca3af; transition: all 0.2s;
+      }
+      .toggle-registered, .toggle-attended:hover { background-color: #f3f4f6; }
+      .toggle-registered.active { background-color: #3b82f6; color: white; border-color: #3b82f6; }
+      .toggle-attended.active { background-color: #10b981; color: white; border-color: #10b981; }
+      .past-session { opacity: 0.9; }
+      .future-session { opacity: 0.6; }
+      .dark .toggle-registered, .dark .toggle-attended { border-color: #4b5563; }
+      .dark .toggle-registered:hover, .dark .toggle-attended:hover { background-color: #1f2937; }
+    </style>
+  </head>
+  <body class="h-full bg-gray-50 text-gray-900 dark:bg-gray-950 dark:text-gray-100">
+    <!-- Loading indicator -->
+    <div id="loadingIndicator" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl flex items-center gap-3">
+        <div class="animate-spin rounded-full h-5 w-5 border-b-2 border-brand-600"></div>
+        <span>Laster...</span>
+      </div>
+    </div>
+
+    <div class="min-h-full flex flex-col">
+      <!-- Top bar -->
+      <header class="sticky top-0 z-30 backdrop-blur supports-[backdrop-filter]:bg-white/70 dark:supports-[backdrop-filter]:bg-gray-950/70 border-b border-gray-200 dark:border-gray-800">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div class="flex items-center justify-between h-16">
+            <div class="flex items-center gap-3">
+              <div class="p-2 rounded-lg bg-brand-600 text-white">
+                <!-- Climbing icon -->
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6"><path d="M11.7 2.1a1 1 0 0 1 1.3.6l.9 2.3 2.6.7a1 1 0 0 1 .2 1.9l-2.2.9-2.2 5.6 2.3 3.6a1 1 0 0 1-.3 1.4l-3.3 2.1a1 1 0 0 1-1.5-.5l-1.1-3.4-2.7-1.1a1 1 0 0 1-.3-1.7l2.5-2 .9-4.1-1.8-1.7a1 1 0 0 1 .4-1.7l3.8-1.2Z"/></svg>
+              </div>
+              <div>
+                <h1 class="text-lg font-semibold leading-tight">Bulldøk</h1>
+                <p class="text-xs text-gray-500 dark:text-gray-400 -mt-1">Registrer treningsøkter</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-2">
+              <button id="adminLoginBtn" class="inline-flex items-center gap-2 px-3 py-2 rounded-md border border-gray-200 dark:border-gray-800 hover:bg-gray-100 dark:hover:bg-gray-900">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path d="M12 1L3 5V11C3 16.55 6.84 21.74 12 23C17.16 21.74 21 16.55 21 11V5L12 1ZM12 7C13.1 7 14 7.9 14 9C14 10.1 13.1 11 12 11C10.9 11 10 10.1 10 9C10 7.9 10.9 7 12 7ZM12 13C13.5 13 16 13.75 16 15.25V17H8V15.25C8 13.75 10.5 13 12 13Z"/></svg>
+                <span id="adminStatus" class="text-sm">Admin Login</span>
+              </button>
+              <button id="themeToggle" class="inline-flex items-center gap-2 px-3 py-2 rounded-md border border-gray-200 dark:border-gray-800 hover:bg-gray-100 dark:hover:bg-gray-900">
+                <span class="sr-only">Bytt tema</span>
+                <svg id="sunIcon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5 hidden dark:block"><path d="M12 18a6 6 0 1 0 0-12 6 6 0 0 0 0 12Zm0 4a1 1 0 0 1-1-1v-1.2a1 1 0 1 1 2 0V21a1 1 0 0 1-1 1Zm0-20a1 1 0 0 0-1 1v1.2a1 1 0 1 0 2 0V3a1 1 0 0 0-1-1ZM3 11a1 1 0 0 0-1 1 1 1 0 1 0 2 0 1 1 0 0 0-1-1Zm18 0a1 1 0 0 0-1 1 1 1 0 1 0 2 0 1 1 0 0 0-1-1ZM4.2 4.2a1 1 0 1 0-1.4 1.4l.9.9a1 1 0 1 0 1.4-1.4l-.9-.9Zm15 15a1 1 0 0 0-1.4 0l-.9.9a1 1 0 1 0 1.4 1.4l.9-.9a1 1 0 0 0 0-1.4ZM4.2 19.8a1 1 0 1 0 1.4 1.4l.9-.9a1 1 0 1 0-1.4-1.4l-.9.9Zm15-15-1 .9a1 1 0 1 0 1.4 1.4l.9-.9a1 1 0 1 0-1.4-1.4Z"/></svg>
+                <svg id="moonIcon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5 dark:hidden"><path d="M21.6 14.6a9 9 0 1 1-12.2-12 1 1 0 0 1 1.2 1.4A7 7 0 0 0 20 13.3a1 1 0 0 1 1.7 1.3Z"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+        <!-- Tabs -->
+        <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div class="flex gap-2 pb-2 overflow-x-auto">
+            <button data-tab="register" class="tab-btn active">Påmelding</button>
+            <button data-tab="myattendance" class="tab-btn">Mine økter</button>
+            <button data-tab="reports" class="tab-btn">Leaderboard</button>
+            <button data-tab="members" class="tab-btn">Medlemmer</button>
+            <button data-tab="sessions" class="tab-btn">Økter</button>
+            <button data-tab="io" class="tab-btn">Import/Eksport</button>
+          </div>
+        </nav>
+      </header>
+
+      <!-- Content -->
+      <main class="flex-1">
+        <div class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
+          <!-- Registration View -->
+          <section id="view-register" class="view">
+            <div class="grid gap-6 lg:grid-cols-3">
+              <!-- Member selection -->
+              <div class="lg:col-span-1">
+                <div class="card">
+                  <div class="card-header">
+                    <h2 class="card-title">Velg deg selv</h2>
+                    <p class="card-subtitle"></p>
+                  </div>
+                  <div class="p-4">
+                    <div class="relative">
+                      <input id="memberSearchInput" type="text" class="input mb-2" placeholder="Søk etter navn..." autocomplete="off">
+                      <div id="memberDropdown" class="absolute z-10 w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-md shadow-lg hidden max-h-60 overflow-y-auto">
+                        <div id="memberList" class="py-1"></div>
+                      </div>
+                    </div>
+                    <div id="selectedMemberInfo" class="hidden">
+                      <div class="p-3 rounded-lg bg-brand-50 dark:bg-brand-950 border border-brand-200 dark:border-brand-800">
+                        <div id="selectedMemberName" class="font-semibold"></div>
+                        <div id="selectedMemberDetails" class="text-sm text-gray-600 dark:text-gray-400 mt-1"></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Available sessions -->
+              <div class="lg:col-span-2">
+                <div class="card">
+                  <div class="card-header">
+                    <h2 class="card-title">Tilgjengelige økter</h2>
+                    <input id="registerSessionSearch" type="search" placeholder="Søk økter" class="input">
+                  </div>
+                  <div id="registerSessionsList" class="divide-y divide-gray-100 dark:divide-gray-800">
+                    <!-- Fallback content for when JavaScript hasn't loaded yet -->
+                    <div class="p-6 text-center text-gray-500">Laster økter...</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Sessions View -->
+          <section id="view-sessions" class="view hidden">
+            <div class="grid gap-6 lg:grid-cols-3">
+              <!-- Create session form -->
+              <div class="lg:col-span-1">
+                <div class="card">
+                  <div class="card-header">
+                    <h2 class="card-title">Opprett økt</h2>
+                    <p class="card-subtitle">Legg til ny treningsøkt</p>
+                  </div>
+                  <div id="sessionFormContainer">
+                    <div id="sessionAdminRequired" class="p-4 text-center">
+                      <div class="mb-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-12 h-12 mx-auto text-gray-400 mb-2"><path d="M12 1L3 5V11C3 16.55 6.84 21.74 12 23C17.16 21.74 21 16.55 21 11V5L12 1ZM12 7C13.1 7 14 7.9 14 9C14 10.1 13.1 11 12 11C10.9 11 10 10.1 10 9C10 7.9 10.9 7 12 7ZM12 13C13.5 13 16 13.75 16 15.25V17H8V15.25C8 13.75 10.5 13 12 13Z"/></svg>
+                        <h3 class="text-sm font-medium text-gray-900 dark:text-gray-100">Admin tilgang påkrevd</h3>
+                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Du må logge inn som admin for å opprette økter</p>
+                      </div>
+                      <button onclick="document.getElementById('adminLoginBtn').click()" class="btn-primary">Logg inn som admin</button>
+                    </div>
+                    <form id="sessionForm" class="space-y-4 p-4 hidden">
+                      <div class="grid grid-cols-2 gap-3">
+                        <div>
+                          <label class="label">Dato</label>
+                          <input type="date" name="date" required class="input" />
+                        </div>
+                        <div>
+                          <label class="label">Sted</label>
+                          <input type="text" name="location" placeholder="Grip Sluppen" class="input" required />
+                        </div>
+                        <div>
+                          <label class="label">Start</label>
+                          <input type="time" name="start" value="19:00" required class="input" />
+                        </div>
+                        <div>
+                          <label class="label">Slutt</label>
+                          <input type="time" name="end" value="23:00" class="input" />
+                        </div>
+                        <div>
+                          <label class="label">Disiplin</label>
+                          <select name="discipline" class="input">
+                            <option value="Bouldering">Buldre</option>
+                            <option value="Top-rope">Topptau</option>
+                            <option value="Lead">Led</option>
+                            <option value="Strength/Conditioning">Styrke/kondisjon</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label class="label">Kapasitet</label>
+                          <input type="number" name="capacity" min="0" placeholder="Ingen grense" class="input" />
+                        </div>
+                      </div>
+                      <div>
+                        <label class="label">Notater</label>
+                        <textarea name="notes" rows="3" class="input" placeholder="Plan, utstyr, mål..."></textarea>
+                      </div>
+                      <div class="flex justify-end">
+                        <button class="btn-primary" type="submit">Opprett økt</button>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Sessions list -->
+              <div class="lg:col-span-2">
+                <div class="card">
+                  <div class="card-header">
+                    <h2 class="card-title">Kommende økter</h2>
+                    <div class="flex items-center gap-2">
+                      <input id="sessionSearch" type="search" placeholder="Søk" class="input">
+                      <select id="sessionFilter" class="input">
+                        <option value="all">Alle</option>
+                        <option value="Bouldering">Buldre</option>
+                        <option value="Top-rope">Topptau</option>
+                        <option value="Lead">Led</option>
+                        <option value="Strength/Conditioning">Styrke/kondisjon</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div id="sessionsList" class="divide-y divide-gray-100 dark:divide-gray-800"></div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Members View -->
+          <section id="view-members" class="view hidden">
+            <div class="grid gap-6 lg:grid-cols-3">
+              <div class="lg:col-span-1">
+                <div class="card">
+                  <div class="card-header">
+                    <h2 class="card-title">Legg til medlem</h2>
+                    <p class="card-subtitle">Opprett et klubbmedlem</p>
+                  </div>
+                  <form id="memberForm" class="space-y-4">
+                    <div class="grid grid-cols-2 gap-3">
+                      <div>
+                        <label class="label">Navn</label>
+                        <input type="text" name="name" required class="input" />
+                      </div>
+                      <div>
+                        <label class="label">E-post</label>
+                        <input type="email" name="email" class="input" />
+                      </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                      <div class="col-span-2">
+                        <label class="label">PR (høyeste grad/farge)</label>
+                        <input type="text" name="pr" class="input" placeholder="f.eks. V5 / Blå / 6b" />
+                      </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                      <div class="flex items-center gap-2">
+                        <input id="belay" type="checkbox" name="belay" class="checkbox" />
+                        <label for="belay" class="label !m-0">Brattkort</label>
+                      </div>
+                      <div>
+                        <label class="label">Nødtelefon</label>
+                        <input type="tel" name="emergency" class="input" />
+                      </div>
+                    </div>
+                    <div>
+                      <label class="label">Notater</label>
+                      <textarea name="notes" rows="3" class="input" placeholder="Allergier, skader, preferanser..."></textarea>
+                    </div>
+                    <div class="flex justify-end">
+                      <button class="btn-primary" type="submit">Legg til medlem</button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+
+              <div class="lg:col-span-2">
+                <div class="card">
+                  <div class="card-header">
+                    <h2 class="card-title">Medlemmer</h2>
+                    <input id="memberSearch" type="search" placeholder="Søk" class="input">
+                  </div>
+                  <div id="membersList" class="divide-y divide-gray-100 dark:divide-gray-800"></div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Attendance View -->
+          <section id="view-attendance" class="view hidden">
+            <div class="card">
+              <div class="card-header">
+                <h2 class="card-title">Oppmøte</h2>
+                 <div class="flex items-center gap-2">
+                   <select id="attendanceSessionSelect" class="input"></select>
+                  <button id="attendanceAddMemberBtn" class="btn-secondary">Legg til medlem</button>
+                  <button id="attendanceSaveBtn" class="btn-primary">Lagre</button>
+                 </div>
+               </div>
+               <div class="p-4">
+                <div id="attendanceEmpty" class="text-sm text-gray-500 dark:text-gray-400">Velg en økt for å registrere oppmøte.</div>
+                 <div id="attendanceTableWrap" class="hidden overflow-x-auto">
+                   <table class="min-w-full text-sm">
+                     <thead class="text-left text-gray-500 dark:text-gray-400">
+                       <tr>
+                        <th class="py-2 pr-4">Medlem</th>
+                        <th class="py-2 pr-4">Påmeldt</th>
+                        <th class="py-2 pr-4">Møtte</th>
+                        <th class="py-2 pr-4">Notater</th>
+                         <th class="py-2"></th>
+                       </tr>
+                     </thead>
+                     <tbody id="attendanceTable" class="align-top"></tbody>
+                   </table>
+                 </div>
+               </div>
+             </div>
+           </section>
+
+          <!-- My Attendance View -->
+          <section id="view-myattendance" class="view hidden">
+            <div class="grid gap-6 lg:grid-cols-4">
+              <!-- Member selection -->
+              <div class="lg:col-span-1">
+                <div class="card">
+                  <div class="card-header">
+                    <h2 class="card-title">Velg deg selv</h2>
+                    <p class="card-subtitle"></p>
+                  </div>
+                  <div class="p-4">
+                    <div class="relative">
+                      <input id="myAttendanceMemberSearchInput" type="text" class="input mb-2" placeholder="Søk etter navn..." autocomplete="off">
+                      <div id="myAttendanceMemberDropdown" class="absolute z-10 w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-md shadow-lg hidden max-h-60 overflow-y-auto">
+                        <div id="myAttendanceMemberList" class="py-1"></div>
+                      </div>
+                    </div>
+                    <div id="myAttendanceSelectedMemberInfo" class="hidden mb-4">
+                      <div class="p-3 rounded-lg bg-brand-50 dark:bg-brand-950 border border-brand-200 dark:border-brand-800">
+                        <div id="myAttendanceSelectedMemberName" class="font-semibold"></div>
+                        <div id="myAttendanceSelectedMemberDetails" class="text-sm text-gray-600 dark:text-gray-400 mt-1"></div>
+                      </div>
+                    </div>
+                    <div id="myAttendanceStats" class="hidden">
+                      <div class="space-y-2 text-sm">
+                        <div class="flex justify-between">
+                          <span>Totale økter:</span>
+                          <span id="myTotalSessions" class="font-semibold">0</span>
+                        </div>
+                        <div class="flex justify-between">
+                          <span>Påmeldt til:</span>
+                          <span id="myRegisteredSessions" class="font-semibold text-blue-600">0</span>
+                        </div>
+                        <div class="flex justify-between">
+                          <span>Møtt opp på:</span>
+                          <span id="myAttendedSessions" class="font-semibold text-green-600">0</span>
+                        </div>
+                        <div class="flex justify-between">
+                          <span>Oppmøte %:</span>
+                          <span id="myAttendanceRate" class="font-semibold">0%</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Calendar view -->
+              <div class="lg:col-span-3">
+                <div class="card">
+                  <div class="card-header">
+                    <h2 class="card-title">Mine økter</h2>
+                    <div class="flex items-center gap-2">
+                      <input id="myAttendanceSearch" type="search" placeholder="Søk økter" class="input">
+                      <select id="myAttendanceFilter" class="input">
+                        <option value="all">Alle økter</option>
+                        <option value="registered">Kun påmeldte</option>
+                        <option value="attended">Kun møtt opp</option>
+                        <option value="missed">Kun ikke møtt</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div class="p-4">
+                    <div id="myAttendanceEmpty" class="text-center text-gray-500 py-8">
+                      Velg deg selv for å se dine økter
+                    </div>
+                    <div id="myAttendanceGrid" class="hidden grid gap-3 sm:grid-cols-2 lg:grid-cols-3"></div>
+                  </div>
+                  <div class="px-4 pb-4">
+                    <div class="flex items-center gap-4 text-xs text-gray-500">
+                      <div class="flex items-center gap-1">
+                        <div class="w-3 h-3 rounded-full bg-green-500"></div>
+                        <span>Møtt opp</span>
+                      </div>
+                      <div class="flex items-center gap-1">
+                        <div class="w-3 h-3 rounded-full bg-blue-500"></div>
+                        <span>Påmeldt, ikke møtt</span>
+                      </div>
+                      <div class="flex items-center gap-1">
+                        <div class="w-3 h-3 rounded-full bg-gray-300"></div>
+                        <span>Ikke deltatt</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Reports View -->
+          <section id="view-reports" class="view hidden">
+            <div class="grid gap-6 lg:grid-cols-3">
+              <div class="lg:col-span-3">
+                <div class="card">
+                  <div class="card-header">
+                    <h2 class="card-title">Bulldøk leaderboard</h2>
+                    <div></div>
+                  </div>
+                  <div id="topAttendees" class="p-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3"></div>
+                </div>
+              </div>
+              <div class="lg:col-span-3">
+                <div class="card">
+                  <div class="card-header">
+                    <h2 class="card-title">Oversikt</h2>
+                    <button id="refreshReportsBtn" class="btn-secondary">Oppdater</button>
+                   </div>
+                   <div class="p-4 grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                     <div class="stat">
+                      <div class="stat-label">Medlemmer</div>
+                       <div id="statMembers" class="stat-value">0</div>
+                     </div>
+                     <div class="stat">
+                      <div class="stat-label">Økter</div>
+                       <div id="statSessions" class="stat-value">0</div>
+                     </div>
+                     <div class="stat">
+                      <div class="stat-label">Totalt oppmøte</div>
+                       <div id="statAttendance" class="stat-value">0</div>
+                     </div>
+                     <div class="stat">
+                      <div class="stat-label">Snitt belegg</div>
+                       <div id="statOccupancy" class="stat-value">0%</div>
+                     </div>
+                   </div>
+                 </div>
+               </div>
+             </div>
+           </section>
+
+          <!-- Import/Export View -->
+          <section id="view-io" class="view hidden">
+            <div id="ioAdminRequired" class="text-center py-12">
+              <div class="max-w-sm mx-auto">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-16 h-16 mx-auto text-gray-400 mb-4"><path d="M12 1L3 5V11C3 16.55 6.84 21.74 12 23C17.16 21.74 21 16.55 21 11V5L12 1ZM12 7C13.1 7 14 7.9 14 9C14 10.1 13.1 11 12 11C10.9 11 10 10.1 10 9C10 7.9 10.9 7 12 7ZM12 13C13.5 13 16 13.75 16 15.25V17H8V15.25C8 13.75 10.5 13 12 13Z"/></svg>
+                <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">Admin tilgang påkrevd</h2>
+                <p class="text-gray-500 dark:text-gray-400 mb-6">Import og eksport av data krever admin-tilgang for å beskytte sensitive klubbdata.</p>
+                <button onclick="document.getElementById('adminLoginBtn').click()" class="btn-primary">Logg inn som admin</button>
+              </div>
+            </div>
+            <div id="ioContent" class="grid gap-6 lg:grid-cols-2 hidden">
+              <div class="card">
+                <div class="card-header">
+                  <h2 class="card-title">Eksporter</h2>
+                   <div class="flex gap-2">
+                    <button id="exportJsonBtn" class="btn-secondary">Eksporter JSON</button>
+                    <button id="exportMembersCsvBtn" class="btn-secondary">Medlemmer CSV</button>
+                    <button id="exportSessionsCsvBtn" class="btn-secondary">Økter CSV</button>
+                    <button id="exportAttendanceCsvBtn" class="btn-secondary">Oppmøte CSV</button>
+                   </div>
+                 </div>
+                <div class="p-4 text-sm text-gray-600 dark:text-gray-400">Last ned data for sikkerhetskopi eller rapportering.</div>
+              </div>
+              <div class="card">
+                <div class="card-header">
+                  <h2 class="card-title">Importer</h2>
+                   <div></div>
+                 </div>
+                 <div class="p-4 space-y-3">
+                  <p class="text-sm text-gray-600 dark:text-gray-400">Gjenopprett fra en tidligere eksportert JSON-fil. Dette vil erstatte alle nåværende data.</p>
+                   <input id="importJsonInput" type="file" accept="application/json" class="input" />
+                  <button id="importJsonBtn" class="btn-danger">Importer JSON</button>
+                 </div>
+               </div>
+             </div>
+           </section>
+        </div>
+      </main>
+
+      <footer class="border-t border-gray-200 dark:border-gray-800 py-6">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-xs text-gray-500 dark:text-gray-400">
+          <div class="flex items-center justify-between">
+            <span>© <span id="year"></span> Bulldøk — made by Magnus J. Moldekleiv</span>
+            <span>Lokal først. Data lagres i nettleseren din.</span>
+          </div>
+        </div>
+      </footer>
+    </div>
+
+    <!-- Add Member to Attendance dialog -->
+    <dialog id="addMemberDialog" class="rounded-xl backdrop:bg-black/40 p-0 w-full max-w-xl">
+      <div class="card !rounded-xl">
+        <div class="card-header">
+          <h3 class="card-title">Legg til medlem i økt</h3>
+           <form class="flex-1 flex justify-end">
+            <input id="addMemberSearch" type="search" placeholder="Søk medlemmer" class="input w-64" />
+          </form>
+        </div>
+        <div class="p-2 max-h-[60vh] overflow-y-auto">
+          <ul id="addMemberList" class="divide-y divide-gray-100 dark:divide-gray-800"></ul>
+        </div>
+        <div class="flex justify-end gap-2 p-3 border-t border-gray-100 dark:border-gray-800">
+          <button data-close-dialog class="btn-secondary">Lukk</button>
+        </div>
+      </div>
+    </dialog>
+
+    <!-- Admin Login dialog -->
+    <dialog id="adminLoginDialog" class="rounded-xl backdrop:bg-black/40 p-0 w-full max-w-md">
+      <div class="card !rounded-xl">
+        <div class="card-header">
+          <h3 class="card-title">Admin Login</h3>
+          <div></div>
+        </div>
+        <form id="adminLoginForm" class="p-4 space-y-4">
+          <div>
+            <label class="label">Admin-passord</label>
+            <input id="adminPasswordInput" type="password" class="input" placeholder="Skriv inn passord" required />
+          </div>
+          <div id="adminLoginError" class="text-sm text-red-600 hidden">Feil passord. Prøv igjen.</div>
+          <div class="flex justify-end gap-2">
+            <button type="button" data-close-dialog class="btn-secondary">Avbryt</button>
+            <button type="submit" class="btn-primary">Logg inn</button>
+          </div>
+        </form>
+      </div>
+    </dialog>
+
+    <script src="app.js"></script>
+    <script>
+      // Some tiny helpers to style generic elements
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.add('px-3','py-2','rounded-md','text-sm','font-medium','text-gray-600','dark:text-gray-300','hover:bg-gray-100','dark:hover:bg-gray-900','data-[active=true]:bg-gray-200','dark:data-[active=true]:bg-gray-800');
+      });
+      document.querySelectorAll('.card').forEach(c => c.classList.add('bg-white','dark:bg-gray-900','rounded-xl','border','border-gray-200','dark:border-gray-800','shadow-sm'));
+      document.querySelectorAll('.card-header').forEach(h => h.classList.add('flex','items-center','justify-between','gap-3','p-4','border-b','border-gray-100','dark:border-gray-800'));
+      document.querySelectorAll('.card-title').forEach(t => t.classList.add('text-base','font-semibold'));
+      document.querySelectorAll('.card-subtitle').forEach(t => t.classList.add('text-xs','text-gray-500','dark:text-gray-400'));
+      document.querySelectorAll('.input').forEach(i => i.classList.add('w-full','px-3','py-2','rounded-md','border','border-gray-200','dark:border-gray-800','bg-white','dark:bg-gray-950','outline-none','focus:ring-2','focus:ring-brand-400'));
+      document.querySelectorAll('.btn-primary').forEach(b => b.classList.add('inline-flex','items-center','gap-2','px-3','py-2','rounded-md','bg-brand-600','text-white','hover:bg-brand-700'));
+      document.querySelectorAll('.btn-secondary').forEach(b => b.classList.add('inline-flex','items-center','gap-2','px-3','py-2','rounded-md','border','border-gray-200','dark:border-gray-800','hover:bg-gray-100','dark:hover:bg-gray-900'));
+      document.querySelectorAll('.btn-danger').forEach(b => b.classList.add('inline-flex','items-center','gap-2','px-3','py-2','rounded-md','bg-red-600','text-white','hover:bg-red-700'));
+      document.querySelectorAll('.checkbox').forEach(c => c.classList.add('w-4','h-4','rounded','border','border-gray-300','dark:border-gray-700','text-brand-600','focus:ring-brand-500'));
+      document.querySelectorAll('.stat').forEach(s => s.classList.add('p-4','rounded-lg','bg-gray-50','dark:bg-gray-950','border','border-gray-200','dark:border-gray-800'));
+      document.querySelectorAll('.stat-label').forEach(s => s.classList.add('text-xs','text-gray-500','dark:text-gray-400'));
+      document.querySelectorAll('.stat-value').forEach(s => s.classList.add('text-2xl','font-semibold'));
+      document.getElementById('year').textContent = new Date().getFullYear();
+    </script>
+  </body>
+</html>
