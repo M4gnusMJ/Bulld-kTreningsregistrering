@@ -4,8 +4,10 @@
 */
 
 ;(function () {
+  console.log('JavaScript file loaded!')
+  
   // Admin authentication - CHANGE THIS IN PRODUCTION!
-  const adminPassword = window.ADMIN_PASSWORD || 'SecureBuldok2024!Admin' // Change this to a secure password
+  const adminPassword = window.ADMIN_PASSWORD || 'bulldok2025' // Change this to a secure password
   let isAdminLoggedIn = false
   
   function checkAdminStatus() {
@@ -262,26 +264,90 @@
     localStorage.theme = dark ? 'dark' : 'light'
   }
 
-  // Event listeners
-  $('#themeBtn').addEventListener('click', toggleTheme)
-
-  // Tab system
-  $$('[data-tab]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const id = btn.dataset.tab
-      state.view = id
-      $$('.view').forEach(v => v.classList.add('hidden'))
-      $('#view-' + id).classList.remove('hidden')
-      $$('.tab-btn').forEach(b => b.dataset.active = 'false')
-      btn.dataset.active = 'true'
-      if (id === 'myattendance') populateMyAttendanceMemberSelect()
-      if (id === 'reports') refreshReports()
+  // Tab system - setup after DOM is ready
+  function setupTabs() {
+    console.log('Setting up tabs...')
+    const tabButtons = $$('[data-tab]')
+    console.log('Found tab buttons:', tabButtons.length)
+    
+    // Tab system
+    tabButtons.forEach(btn => {
+      console.log('Setting up tab button:', btn.dataset.tab)
+      btn.addEventListener('click', () => {
+        console.log('Tab clicked:', btn.dataset.tab)
+        const id = btn.dataset.tab
+        state.view = id
+        $$('.view').forEach(v => v.classList.add('hidden'))
+        $('#view-' + id).classList.remove('hidden')
+        $$('.tab-btn').forEach(b => b.dataset.active = 'false')
+        btn.dataset.active = 'true'
+        if (id === 'myattendance') populateMyAttendanceMemberSelect()
+        if (id === 'reports') refreshReports()
+      })
     })
-  })
-  // set initial tab active
-  $('[data-tab="register"]').dataset.active = 'true'
+    // set initial tab active
+    const initialTab = $('[data-tab="register"]')
+    if (initialTab) {
+      initialTab.dataset.active = 'true'
+      console.log('Initial tab set to register')
+    }
+    console.log('Tabs setup complete')
+  }
 
-  // Forms
+  // Event listeners - setup after DOM is ready
+  function setupEventListeners() {
+    console.log('Setting up event listeners...')
+    
+    // Theme toggle
+    const themeBtn = $('#themeToggle')
+    console.log('Theme button found:', themeBtn)
+    if (themeBtn) {
+      themeBtn.addEventListener('click', toggleTheme)
+      console.log('Theme button listener attached')
+    }
+    
+    // Tab system
+    setupTabs()
+    
+    // Admin login button
+    const adminBtn = $('#adminLoginBtn')
+    console.log('Admin button found:', adminBtn)
+    if (adminBtn) {
+      adminBtn.addEventListener('click', () => {
+        console.log('Admin button clicked!')
+        if (isAdminLoggedIn) {
+          logoutAdmin()
+        } else {
+          $('#adminLoginDialog').showModal()
+          $('#adminPasswordInput').focus()
+        }
+      })
+      console.log('Admin button listener attached')
+    }
+    
+    // Admin login form
+    const adminForm = $('#adminLoginForm')
+    console.log('Admin form found:', adminForm)
+    if (adminForm) {
+      adminForm.addEventListener('submit', e => {
+        e.preventDefault()
+        console.log('Admin form submitted')
+        const password = $('#adminPasswordInput').value
+        if (loginAdmin(password)) {
+          $('#adminLoginDialog').close()
+          $('#adminPasswordInput').value = ''
+          $('#adminLoginError').textContent = ''
+        } else {
+          $('#adminLoginError').textContent = 'Feil passord'
+        }
+      })
+      console.log('Admin form listener attached')
+    }
+    
+    console.log('Event listeners setup complete')
+  }
+
+  // Forms - Session form
   $('#sessionForm').addEventListener('submit', async e => {
     e.preventDefault()
     if (!requireAdmin('create session')) return
@@ -1461,11 +1527,13 @@
     input.click()
   })
 
-  // Admin login
+  // Admin login - DOM elements (moved event listeners to setupEventListeners())
   const adminLoginDialog = $('#adminLoginDialog')
   const adminPasswordInput = $('#adminPasswordInput')
   const adminLoginError = $('#adminLoginError')
 
+  // Event listeners moved to setupEventListeners()
+  /*
   $('#adminLoginBtn').addEventListener('click', () => {
     if (isAdminLoggedIn) {
       logoutAdmin()
@@ -1487,6 +1555,7 @@
       adminPasswordInput.select()
     }
   })
+  */
 
   // Close dialogs
   $$('[data-close-dialog]').forEach(btn => {
@@ -1505,17 +1574,27 @@
 
   // Initialize application
   async function initializeApp() {
+    console.log('Initializing application...')
     try {
       // Load data from server
+      console.log('Loading data from server...')
       await db.load()
+      console.log('Data loaded successfully')
+      
+      // Setup event listeners
+      console.log('Setting up event listeners...')
+      setupEventListeners()
       
       // Initialize theme
+      console.log('Initializing theme...')
       initTheme()
       
       // Check admin status
+      console.log('Checking admin status...')
       checkAdminStatus()
       
       // Render all components
+      console.log('Rendering components...')
       render()
       
       console.log('Application initialized successfully')

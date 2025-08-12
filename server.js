@@ -312,10 +312,11 @@ app.get('/', (req, res) => {
 });
 
 // Start server
-app.listen(PORT, async () => {
+app.listen(PORT, '0.0.0.0', async () => {
   await ensureDataDirectory();
   console.log(`Bulldok Climbing Club server running on port ${PORT}`);
   console.log(`Visit http://localhost:${PORT} to view the application`);
+  console.log(`Also available at http://127.0.0.1:${PORT}`);
 });
 
 module.exports = app;

@@ -244,34 +244,35 @@
                   <form id="memberForm" class="space-y-4">
                     <div class="grid grid-cols-2 gap-3">
                       <div>
-                        <label class="label">Navn</label>
+                        <label class="label">Navn <span class="text-red-500">*</span></label>
                         <input type="text" name="name" required class="input" />
                       </div>
                       <div>
-                        <label class="label">E-post</label>
-                        <input type="email" name="email" class="input" />
+                        <label class="label">E-post <span class="text-red-500">*</span></label>
+                        <input type="email" name="email" required class="input" />
                       </div>
                     </div>
                     <div class="grid grid-cols-2 gap-3">
                       <div class="col-span-2">
-                        <label class="label">PR (høyeste grad/farge)</label>
+                        <label class="label">PR (høyeste grad/farge) <span class="text-gray-400 text-sm">(valgfri)</span></label>
                         <input type="text" name="pr" class="input" placeholder="f.eks. V5 / Blå / 6b" />
                       </div>
                     </div>
                     <div class="grid grid-cols-2 gap-3">
                       <div class="flex items-center gap-2">
                         <input id="belay" type="checkbox" name="belay" class="checkbox" />
-                        <label for="belay" class="label !m-0">Brattkort</label>
+                        <label for="belay" class="label !m-0">Brattkort <span class="text-gray-400 text-sm">(valgfri)</span></label>
                       </div>
                       <div>
-                        <label class="label">Nødtelefon</label>
+                        <label class="label">Nødtelefon <span class="text-gray-400 text-sm">(valgfri)</span></label>
                         <input type="tel" name="emergency" class="input" />
                       </div>
                     </div>
                     <div>
-                      <label class="label">Notater</label>
+                      <label class="label">Notater <span class="text-gray-400 text-sm">(valgfri)</span></label>
                       <textarea name="notes" rows="3" class="input" placeholder="Allergier, skader, preferanser..."></textarea>
                     </div>
+                    <div id="memberFormError" class="hidden text-red-600 text-sm bg-red-50 dark:bg-red-950 p-3 rounded"></div>
                     <div class="flex justify-end">
                       <button class="btn-primary" type="submit">Legg til medlem</button>
                     </div>
@@ -495,7 +496,7 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-xs text-gray-500 dark:text-gray-400">
           <div class="flex items-center justify-between">
             <span>© <span id="year"></span> Bulldøk — made by Magnus J. Moldekleiv</span>
-            <span>Lokal først. Data lagres i nettleseren din.</span>
+            <span>Bulldøk training systems inc.</span>
           </div>
         </div>
       </footer>
@@ -559,6 +560,402 @@
       document.querySelectorAll('.stat-label').forEach(s => s.classList.add('text-xs','text-gray-500','dark:text-gray-400'));
       document.querySelectorAll('.stat-value').forEach(s => s.classList.add('text-2xl','font-semibold'));
       document.getElementById('year').textContent = new Date().getFullYear();
+      
+      // Test if JavaScript is working
+      console.log('Inline JavaScript is working!');
+      
+      // Test if DOM elements exist and attach working event listeners
+      setTimeout(() => {
+        const themeBtn = document.getElementById('themeToggle');
+        const adminBtn = document.getElementById('adminLoginBtn');
+        const tabBtns = document.querySelectorAll('[data-tab]');
+        
+        console.log('Setting up working event listeners...');
+        
+        // Theme toggle - real functionality
+        if (themeBtn) {
+          themeBtn.addEventListener('click', function() {
+            const isDark = document.documentElement.classList.toggle('dark');
+            localStorage.theme = isDark ? 'dark' : 'light';
+            console.log('Theme toggled to:', isDark ? 'dark' : 'light');
+          });
+          console.log('Theme button listener attached');
+        }
+        
+        // Admin login - real functionality  
+        let isAdminLoggedIn = sessionStorage.getItem('adminLoggedIn') === 'true';
+        
+        function updateAdminUI() {
+          const adminStatus = document.getElementById('adminStatus');
+          const sessionForm = document.getElementById('sessionForm');
+          const sessionAdminRequired = document.getElementById('sessionAdminRequired');
+          const ioContent = document.getElementById('ioContent');
+          const ioAdminRequired = document.getElementById('ioAdminRequired');
+          
+          if (isAdminLoggedIn) {
+            // Update admin button
+            adminBtn.classList.remove('border-gray-200', 'dark:border-gray-800', 'hover:bg-gray-100', 'dark:hover:bg-gray-900');
+            adminBtn.classList.add('bg-green-100', 'dark:bg-green-900', 'border-green-300', 'dark:border-green-700', 'text-green-700', 'dark:text-green-300');
+            adminStatus.textContent = 'Admin (Logg ut)';
+            adminBtn.title = 'Du er logget inn som admin. Klikk for å logge ut.';
+            
+            // Show admin content
+            if (sessionForm) sessionForm.classList.remove('hidden');
+            if (sessionAdminRequired) sessionAdminRequired.classList.add('hidden');
+            if (ioContent) ioContent.classList.remove('hidden');
+            if (ioAdminRequired) ioAdminRequired.classList.add('hidden');
+          } else {
+            // Update admin button
+            adminBtn.classList.remove('bg-green-100', 'dark:bg-green-900', 'border-green-300', 'dark:border-green-700', 'text-green-700', 'dark:text-green-300');
+            adminBtn.classList.add('border-gray-200', 'dark:border-gray-800', 'hover:bg-gray-100', 'dark:hover:bg-gray-900');
+            adminStatus.textContent = 'Admin Login';
+            adminBtn.title = 'Logg inn som admin for å få tilgang til alle funksjoner.';
+            
+            // Hide admin content
+            if (sessionForm) sessionForm.classList.add('hidden');
+            if (sessionAdminRequired) sessionAdminRequired.classList.remove('hidden');
+            if (ioContent) ioContent.classList.add('hidden');
+            if (ioAdminRequired) ioAdminRequired.classList.remove('hidden');
+          }
+        }
+        
+        if (adminBtn) {
+          // Initial admin UI update
+          updateAdminUI();
+          
+          adminBtn.addEventListener('click', function() {
+            if (isAdminLoggedIn) {
+              // Logout
+              isAdminLoggedIn = false;
+              sessionStorage.removeItem('adminLoggedIn');
+              updateAdminUI();
+              alert('✅ Admin utlogget!');
+            } else {
+              // Login
+              const password = prompt('Enter admin password:');
+              if (password === 'bulldok2025') {
+                isAdminLoggedIn = true;
+                sessionStorage.setItem('adminLoggedIn', 'true');
+                updateAdminUI();
+                alert('✅ Admin innlogget!');
+              } else if (password !== null) {
+                alert('❌ Feil passord!');
+              }
+            }
+          });
+          console.log('Admin button listener attached');
+        }
+        
+        // Tab functionality - real functionality
+        tabBtns.forEach(btn => {
+          btn.addEventListener('click', function() {
+            const tabId = btn.dataset.tab;
+            
+            // Hide all views
+            document.querySelectorAll('.view').forEach(view => {
+              view.classList.add('hidden');
+            });
+            
+            // Show selected view
+            const targetView = document.getElementById('view-' + tabId);
+            if (targetView) {
+              targetView.classList.remove('hidden');
+            }
+            
+            // Update tab active states
+            tabBtns.forEach(tab => {
+              tab.dataset.active = 'false';
+              tab.classList.remove('active');
+            });
+            btn.dataset.active = 'true';
+            btn.classList.add('active');
+            
+            console.log('Switched to tab:', tabId);
+          });
+        });
+        
+        // Member form submission
+        const memberForm = document.getElementById('memberForm');
+        const memberFormError = document.getElementById('memberFormError');
+        
+        function showMemberError(message) {
+          memberFormError.textContent = message;
+          memberFormError.classList.remove('hidden');
+        }
+        
+        function hideMemberError() {
+          memberFormError.classList.add('hidden');
+        }
+        
+        if (memberForm) {
+          memberForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            hideMemberError();
+            console.log('Member form submitted');
+            
+            try {
+              const formData = new FormData(e.target);
+              const member = {
+                name: formData.get('name').trim(),
+                email: formData.get('email').trim(),
+                belay: !!formData.get('belay'),
+                emergency: formData.get('emergency').trim(),
+                notes: formData.get('notes').trim(),
+                pr: (formData.get('pr') || '').trim()
+              };
+              
+              console.log('Submitting member:', member);
+              
+              // Client-side validation
+              if (!member.name) {
+                showMemberError('Navn er påkrevd');
+                return;
+              }
+              
+              if (!member.email) {
+                showMemberError('E-post er påkrevd');
+                return;
+              }
+              
+              // Basic email validation
+              if (!/\S+@\S+\.\S+/.test(member.email)) {
+                showMemberError('Ugyldig e-postadresse');
+                return;
+              }
+              
+              // Show loading state
+              const submitBtn = memberForm.querySelector('button[type="submit"]');
+              const originalText = submitBtn.textContent;
+              submitBtn.textContent = 'Lagrer...';
+              submitBtn.disabled = true;
+              
+              // Make API call
+              const response = await fetch('/api/members', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(member)
+              });
+              
+              // Restore button state
+              submitBtn.textContent = originalText;
+              submitBtn.disabled = false;
+              
+              if (response.ok) {
+                const newMember = await response.json();
+                console.log('Member created:', newMember);
+                alert('✅ Medlem lagt til: ' + member.name);
+                memberForm.reset();
+                hideMemberError();
+              } else {
+                // Try to get JSON error first, then fallback to text
+                try {
+                  const errorData = await response.json();
+                  const errorMessage = errorData.error || errorData.message || 'Unknown error';
+                  console.error('Server error:', response.status, errorMessage);
+                  showMemberError(`Server feil (${response.status}): ${errorMessage}`);
+                } catch (jsonError) {
+                  const errorText = await response.text();
+                  console.error('Server error:', response.status, errorText);
+                  showMemberError(`Server feil (${response.status}): ${errorText}`);
+                }
+              }
+            } catch (error) {
+              console.error('Error submitting member:', error);
+              showMemberError('Nettverksfeil: ' + error.message);
+              
+              // Restore button state in case of error
+              const submitBtn = memberForm.querySelector('button[type="submit"]');
+              submitBtn.textContent = 'Legg til medlem';
+              submitBtn.disabled = false;
+            }
+          });
+          console.log('Member form listener attached');
+        }
+        
+        console.log('All working event listeners attached!');
+        
+        // Load and display data
+        loadApplicationData();
+        
+      }, 100);
+
+      // Data loading and display functions
+      async function loadApplicationData() {
+        try {
+          console.log('Loading application data...');
+          
+          // Load members
+          const membersResponse = await fetch('/api/members');
+          const members = await membersResponse.json();
+          displayMembers(members);
+          
+          // Load sessions
+          const sessionsResponse = await fetch('/api/sessions');
+          const sessions = await sessionsResponse.json();
+          displaySessions(sessions);
+          
+          console.log('Data loaded successfully');
+        } catch (error) {
+          console.error('Failed to load data:', error);
+        }
+      }
+      
+      function displayMembers(members) {
+        console.log('Displaying members:', members);
+        
+        // Update members tab content
+        const membersList = document.getElementById('membersList');
+        if (membersList && members.length > 0) {
+          membersList.innerHTML = members.map(member => `
+            <div class="bg-white dark:bg-gray-800 rounded-lg p-4 shadow mb-4">
+              <div class="flex justify-between items-start">
+                <div>
+                  <h4 class="font-semibold">${member.name}</h4>
+                  <p class="text-sm text-gray-600 dark:text-gray-400">${member.email}</p>
+                  <p class="text-sm"><span class="font-medium">PR:</span> ${member.pr || 'Ikke oppgitt'}</p>
+                  <p class="text-sm"><span class="font-medium">Sikring:</span> ${member.belay ? '✅ Ja' : '❌ Nei'}</p>
+                  ${member.notes ? `<p class="text-sm text-gray-600 dark:text-gray-400 mt-1">${member.notes}</p>` : ''}
+                </div>
+                <div class="text-xs text-gray-500">
+                  ID: ${member.id}
+                </div>
+              </div>
+            </div>
+          `).join('');
+        } else if (membersList) {
+          membersList.innerHTML = '<p class="text-gray-500 dark:text-gray-400 p-4">Ingen medlemmer registrert ennå.</p>';
+        }
+      }
+      
+      function displaySessions(sessions) {
+        console.log('Displaying sessions:', sessions);
+        
+        // Update sessions in registration tab
+        const sessionSelect = document.getElementById('sessionSelect');
+        if (sessionSelect && sessions.length > 0) {
+          sessionSelect.innerHTML = `
+            <option value="">Velg økt...</option>
+            ${sessions.map(session => `
+              <option value="${session.id}">
+                ${session.date} - ${session.discipline} (${session.location}) - ${session.start}-${session.end}
+              </option>
+            `).join('')}
+          `;
+        }
+        
+        // Update register sessions list
+        const registerSessionsList = document.getElementById('registerSessionsList');
+        if (registerSessionsList && sessions.length > 0) {
+          registerSessionsList.innerHTML = sessions.map(session => `
+            <div class="p-4 hover:bg-gray-50 dark:hover:bg-gray-700">
+              <div class="flex justify-between items-start">
+                <div>
+                  <h4 class="font-semibold">${session.discipline}</h4>
+                  <p class="text-sm text-gray-600 dark:text-gray-400">📍 ${session.location}</p>
+                  <p class="text-sm">📅 ${session.date} • ⏰ ${session.start} - ${session.end}</p>
+                  <p class="text-sm">👥 Kapasitet: ${session.capacity} personer</p>
+                  ${session.notes ? `<p class="text-sm text-gray-600 dark:text-gray-400 mt-2">${session.notes}</p>` : ''}
+                </div>
+              </div>
+            </div>
+          `).join('');
+        } else if (registerSessionsList) {
+          registerSessionsList.innerHTML = '<p class="text-gray-500 dark:text-gray-400 p-4">Ingen tilgjengelige økter.</p>';
+        }
+        
+        // Update sessions tab content
+        const sessionsList = document.getElementById('sessionsList');
+        if (sessionsList && sessions.length > 0) {
+          sessionsList.innerHTML = sessions.map(session => `
+            <div class="bg-white dark:bg-gray-800 rounded-lg p-4 shadow mb-4">
+              <div class="flex justify-between items-start">
+                <div>
+                  <h4 class="font-semibold">${session.discipline}</h4>
+                  <p class="text-sm text-gray-600 dark:text-gray-400">📍 ${session.location}</p>
+                  <p class="text-sm">📅 ${session.date} • ⏰ ${session.start} - ${session.end}</p>
+                  <p class="text-sm">👥 Kapasitet: ${session.capacity} personer</p>
+                  ${session.notes ? `<p class="text-sm text-gray-600 dark:text-gray-400 mt-2">${session.notes}</p>` : ''}
+                </div>
+                <div class="text-xs text-gray-500">
+                  ID: ${session.id}
+                </div>
+              </div>
+            </div>
+          `).join('');
+        } else if (sessionsList) {
+          sessionsList.innerHTML = '<p class="text-gray-500 dark:text-gray-400 p-4">Ingen økter planlagt ennå.</p>';
+        }
+      }
+      
+      // Session form functionality
+      const sessionForm = document.getElementById('sessionForm');
+      if (sessionForm) {
+        sessionForm.addEventListener('submit', async function(e) {
+          e.preventDefault();
+          
+          if (!isAdminLoggedIn) {
+            alert('❌ Du må være logget inn som admin for å opprette økter!');
+            return;
+          }
+          
+          const formData = new FormData(sessionForm);
+          const session = {
+            date: formData.get('date'),
+            location: formData.get('location'),
+            start: formData.get('start'),
+            end: formData.get('end'),
+            discipline: formData.get('discipline'),
+            capacity: parseInt(formData.get('capacity')),
+            notes: formData.get('notes') || ''
+          };
+          
+          // Basic validation
+          if (!session.date || !session.location || !session.start || !session.end || !session.discipline || !session.capacity) {
+            alert('❌ Alle påkrevde felter må fylles ut!');
+            return;
+          }
+          
+          try {
+            const submitBtn = sessionForm.querySelector('button[type="submit"]');
+            const originalText = submitBtn.textContent;
+            submitBtn.textContent = 'Oppretter...';
+            submitBtn.disabled = true;
+            
+            // Make API call
+            const response = await fetch('/api/sessions', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify(session)
+            });
+            
+            // Restore button state
+            submitBtn.textContent = originalText;
+            submitBtn.disabled = false;
+            
+            if (response.ok) {
+              const newSession = await response.json();
+              console.log('Session created:', newSession);
+              alert('✅ Økt opprettet: ' + session.discipline + ' på ' + session.location);
+              sessionForm.reset();
+              
+              // Reload sessions data
+              loadApplicationData();
+            } else {
+              const error = await response.json();
+              throw new Error(error.message || 'Feil ved oppretting av økt');
+            }
+          } catch (error) {
+            console.error('Error creating session:', error);
+            alert('❌ Feil ved oppretting av økt: ' + error.message);
+          }
+        });
+        console.log('Session form listener attached');
+      }
+      
     </script>
   </body>
 </html>

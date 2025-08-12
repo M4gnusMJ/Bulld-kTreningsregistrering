@@ -1,0 +1,6 @@
+{
+  "watch": ["server.js", "init-data.js"],
+  "ignore": ["data/*", "public/*", "node_modules/*"],
+  "ext": "js,json",
+  "delay": 1000
+}
