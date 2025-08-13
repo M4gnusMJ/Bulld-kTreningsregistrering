@@ -4,10 +4,21 @@ const path = require('path');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
+const session = require('express-session');
+const passport = require('passport');
+const GoogleStrategy = require('passport-google-oauth20').Strategy;
+
+// Load environment variables
+require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 const DATA_FILE = path.join(__dirname, 'data', 'climbclub.json');
+
+// Environment variables (for development, we'll use defaults)
+const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || 'demo_client_id';
+const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET || 'demo_client_secret';
+const SESSION_SECRET = process.env.SESSION_SECRET || 'bulldok-climbing-club-secret-change-in-production';
 
 // Security middleware
 app.use(helmet({
@@ -15,6 +26,7 @@ app.use(helmet({
     directives: {
       defaultSrc: ["'self'"],
       scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.tailwindcss.com"],
+      scriptSrcAttr: ["'unsafe-inline'"], // Allow inline event handlers
       styleSrc: ["'self'", "'unsafe-inline'", "https://cdn.tailwindcss.com"],
       imgSrc: ["'self'", "data:", "https:"],
       connectSrc: ["'self'"]
@@ -24,7 +36,65 @@ app.use(helmet({
 
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
-app.use(express.static('public'));
+app.use(express.static(__dirname)); // Serve static files from root directory
+
+// Session configuration
+app.use(session({
+  secret: SESSION_SECRET,
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    secure: process.env.NODE_ENV === 'production',
+    maxAge: 24 * 60 * 60 * 1000 // 24 hours
+  }
+}));
+
+// Passport configuration
+app.use(passport.initialize());
+app.use(passport.session());
+
+// Passport serialization
+passport.serializeUser((user, done) => {
+  done(null, user.id);
+});
+
+passport.deserializeUser(async (id, done) => {
+  try {
+    const data = await readData();
+    const member = data.members.find(m => m.id === id);
+    done(null, member);
+  } catch (error) {
+    done(error, null);
+  }
+});
+
+// Google OAuth Strategy
+passport.use(new GoogleStrategy({
+  clientID: GOOGLE_CLIENT_ID,
+  clientSecret: GOOGLE_CLIENT_SECRET,
+  callbackURL: "/auth/google/callback"
+}, async (accessToken, refreshToken, profile, done) => {
+  try {
+    const data = await readData();
+    
+    // Find member by email
+    const member = data.members.find(m => m.email === profile.emails[0].value);
+    
+    if (member) {
+      // Update member with Google profile info if needed
+      member.googleId = profile.id;
+      member.profilePicture = profile.photos[0]?.value;
+      await writeData(data);
+      
+      return done(null, member);
+    } else {
+      // Member not found - they need to be registered first
+      return done(null, false, { message: 'No member found with this email. Please register first.' });
+    }
+  } catch (error) {
+    return done(error, null);
+  }
+}));
 
 // Rate limiting
 const limiter = rateLimit({
@@ -71,6 +141,114 @@ async function generateId(data) {
 }
 
 // API Routes
+
+// Authentication Routes
+
+// Development test login (simulates Google OAuth)
+app.get('/auth/test-login/:email', async (req, res) => {
+  if (process.env.NODE_ENV === 'production') {
+    return res.status(404).json({ error: 'Test login not available in production' });
+  }
+  
+  try {
+    const { email } = req.params;
+    const data = await readData();
+    
+    // Find member by email
+    const member = data.members.find(m => m.email === email);
+    
+    if (member) {
+      // Simulate passport login
+      req.login(member, (err) => {
+        if (err) {
+          return res.status(500).json({ error: 'Login failed' });
+        }
+        res.redirect('/?login=success');
+      });
+    } else {
+      res.redirect('/login-failed');
+    }
+  } catch (error) {
+    console.error('Test login error:', error);
+    res.status(500).json({ error: 'Test login failed' });
+  }
+});
+
+app.get('/auth/google',
+  passport.authenticate('google', { scope: ['profile', 'email'] })
+);
+
+app.get('/auth/google/callback',
+  passport.authenticate('google', { failureRedirect: '/login-failed' }),
+  (req, res) => {
+    // Successful authentication
+    res.redirect('/?login=success');
+  }
+);
+
+app.get('/auth/logout', (req, res) => {
+  req.logout((err) => {
+    if (err) {
+      return res.status(500).json({ error: 'Logout failed' });
+    }
+    res.redirect('/?logout=success');
+  });
+});
+
+app.get('/api/auth/user', (req, res) => {
+  if (req.isAuthenticated()) {
+    res.json({
+      authenticated: true,
+      user: {
+        id: req.user.id,
+        name: req.user.name,
+        email: req.user.email,
+        profilePicture: req.user.profilePicture
+      }
+    });
+  } else {
+    res.json({ authenticated: false });
+  }
+});
+
+app.get('/login-failed', (req, res) => {
+  res.send(`
+    <html>
+      <head><title>Login Failed</title></head>
+      <body style="font-family: Arial, sans-serif; text-align: center; padding: 50px;">
+        <h1>Login Failed</h1>
+        <p>No member found with this email address.</p>
+        <p>Please make sure you're registered as a member first.</p>
+        <a href="/" style="color: #3B82F6;">Go back to main page</a>
+      </body>
+    </html>
+  `);
+});
+
+// Development test login endpoint
+app.get('/auth/test-login/:email', async (req, res) => {
+  const { email } = req.params;
+  
+  try {
+    const data = await readData();
+    const member = data.members.find(m => m.email === decodeURIComponent(email));
+    
+    if (member) {
+      // Simulate successful login
+      req.login(member, (err) => {
+        if (err) {
+          return res.status(500).send('Login error');
+        }
+        res.redirect('/?login=success');
+      });
+    } else {
+      res.redirect('/login-failed');
+    }
+  } catch (error) {
+    console.error('Test login error:', error);
+    res.status(500).send('Login error');
+  }
+});
 
 // Get all data
 app.get('/api/data', async (req, res) => {
@@ -140,7 +318,35 @@ function validateMember(member) {
 app.get('/api/sessions', async (req, res) => {
   try {
     const data = await readData();
-    res.json(data.sessions);
+    
+    // Enhance sessions with registration information
+    const enhancedSessions = data.sessions.map(session => {
+      const sessionAttendance = data.attendance[session.id] || {};
+      const sessionRegistrations = data.registrations[session.id] || [];
+      
+      // Get registered members (from registrations data)
+      const registrations = sessionRegistrations.map(memberId => {
+        const member = data.members.find(m => m.id === memberId);
+        return member ? member.name : `Unknown Member (${memberId})`;
+      });
+      
+      // Get attended members (from attendance data, only those with true values)
+      const attendedMemberIds = Object.keys(sessionAttendance).filter(
+        memberId => sessionAttendance[memberId] === true
+      );
+      const attendance = attendedMemberIds.map(memberId => {
+        const member = data.members.find(m => m.id === memberId);
+        return member ? member.name : `Unknown Member (${memberId})`;
+      });
+      
+      return {
+        ...session,
+        registrations: registrations,
+        attendance: attendance
+      };
+    });
+    
+    res.json(enhancedSessions);
   } catch (error) {
     console.error('Error reading sessions:', error);
     res.status(500).json({ error: 'Failed to read sessions' });
@@ -202,6 +408,122 @@ app.get('/api/members', async (req, res) => {
   } catch (error) {
     console.error('Error reading members:', error);
     res.status(500).json({ error: 'Failed to read members' });
+  }
+});
+
+// Session registration endpoints
+app.post('/api/sessions/:sessionId/register', async (req, res) => {
+  if (!req.isAuthenticated()) {
+    return res.status(401).json({ error: 'You must be logged in to register for sessions' });
+  }
+
+  try {
+    const { sessionId } = req.params;
+    const memberId = req.user.id;
+    const data = await readData();
+
+    // Check if session exists
+    const session = data.sessions.find(s => s.id === sessionId);
+    if (!session) {
+      return res.status(404).json({ error: 'Session not found' });
+    }
+
+    // Initialize attendance if not exists
+    if (!data.attendance[sessionId]) {
+      data.attendance[sessionId] = {};
+    }
+
+    // Check if already registered
+    if (data.attendance[sessionId][memberId] !== undefined) {
+      return res.status(400).json({ error: 'Already registered for this session' });
+    }
+
+    // Check capacity
+    const registeredCount = Object.keys(data.attendance[sessionId]).length;
+    if (registeredCount >= session.capacity) {
+      return res.status(400).json({ error: 'Session is full' });
+    }
+
+    // Register user (registered but not attended yet)
+    data.attendance[sessionId][memberId] = false;
+
+    await writeData(data);
+
+    res.json({
+      message: 'Successfully registered for session',
+      session: session,
+      member: { name: req.user.name, email: req.user.email }
+    });
+  } catch (error) {
+    console.error('Error registering for session:', error);
+    res.status(500).json({ error: 'Failed to register for session' });
+  }
+});
+
+app.delete('/api/sessions/:sessionId/register', async (req, res) => {
+  if (!req.isAuthenticated()) {
+    return res.status(401).json({ error: 'You must be logged in to unregister from sessions' });
+  }
+
+  try {
+    const { sessionId } = req.params;
+    const memberId = req.user.id;
+    const data = await readData();
+
+    if (!data.attendance[sessionId] || data.attendance[sessionId][memberId] === undefined) {
+      return res.status(400).json({ error: 'Not registered for this session' });
+    }
+
+    delete data.attendance[sessionId][memberId];
+
+    // Clean up empty session attendance
+    if (Object.keys(data.attendance[sessionId]).length === 0) {
+      delete data.attendance[sessionId];
+    }
+
+    await writeData(data);
+
+    res.json({ message: 'Successfully unregistered from session' });
+  } catch (error) {
+    console.error('Error unregistering from session:', error);
+    res.status(500).json({ error: 'Failed to unregister from session' });
+  }
+});
+
+app.post('/api/sessions/:sessionId/attend', async (req, res) => {
+  if (!req.isAuthenticated()) {
+    return res.status(401).json({ error: 'You must be logged in to mark attendance' });
+  }
+
+  try {
+    const { sessionId } = req.params;
+    const memberId = req.user.id;
+    const data = await readData();
+
+    // Check if session exists
+    const session = data.sessions.find(s => s.id === sessionId);
+    if (!session) {
+      return res.status(404).json({ error: 'Session not found' });
+    }
+
+    // Initialize attendance if not exists
+    if (!data.attendance[sessionId]) {
+      data.attendance[sessionId] = {};
+    }
+
+    // Mark as attended (true)
+    data.attendance[sessionId][memberId] = true;
+
+    await writeData(data);
+
+    res.json({
+      message: 'Attendance marked successfully',
+      session: session,
+      member: { name: req.user.name, email: req.user.email }
+    });
+  } catch (error) {
+    console.error('Error marking attendance:', error);
+    res.status(500).json({ error: 'Failed to mark attendance' });
   }
 });
 
@@ -301,6 +623,51 @@ app.delete('/api/attendance/:sessionId/:memberId', async (req, res) => {
   }
 });
 
+// Toggle attendance for the current user
+app.post('/api/attendance', async (req, res) => {
+  try {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ error: 'Not authenticated' });
+    }
+
+    const data = await readData();
+    const { sessionId, action } = req.body;
+    
+    // Find the member by email
+    const member = data.members.find(m => m.email === req.user.email);
+    if (!member) {
+      return res.status(404).json({ error: 'Member not found' });
+    }
+
+    // Initialize attendance and registrations for this session if they don't exist
+    if (!data.attendance[sessionId]) {
+      data.attendance[sessionId] = {};
+    }
+    if (!data.registrations[sessionId]) {
+      data.registrations[sessionId] = [];
+    }
+
+    if (action === 'add') {
+      data.attendance[sessionId][member.id] = true;
+      // Also add to registrations if not already there
+      if (!data.registrations[sessionId].includes(member.id)) {
+        data.registrations[sessionId].push(member.id);
+      }
+    } else if (action === 'remove') {
+      data.attendance[sessionId][member.id] = false; // Set to false instead of deleting
+      // Keep the user in registrations - they were still originally registered
+    } else {
+      return res.status(400).json({ error: 'Invalid action. Use "add" or "remove"' });
+    }
+
+    await writeData(data);
+    res.json({ success: true, action, sessionId, memberId: member.id });
+  } catch (error) {
+    console.error('Error toggling attendance:', error);
+    res.status(500).json({ error: 'Failed to toggle attendance' });
+  }
+});
+
 // Health check
 app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString() });
@@ -308,7 +675,7 @@ app.get('/api/health', (req, res) => {
 
 // Serve the main application
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  res.sendFile(path.join(__dirname, 'index.html'));
 });
 
 // Start server

@@ -1,4 +1,4 @@
-# Bulldok Climbing Club Management System
+ # Bulldok Climbing Club Management System
 
 A web-based application for managing climbing club sessions, members, and attendance tracking. Now enhanced with backend API support for web hosting deployment.
 

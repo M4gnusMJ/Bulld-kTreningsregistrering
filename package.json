@@ -9,14 +9,24 @@
     "build": "echo 'No build step required'",
     "postinstall": "node init-data.js"
   },
-  "keywords": ["climbing", "club", "management", "express", "nodejs"],
+  "keywords": [
+    "climbing",
+    "club",
+    "management",
+    "express",
+    "nodejs"
+  ],
   "author": "Magnus Moldekleiv",
   "license": "MIT",
   "dependencies": {
-    "express": "^4.18.2",
     "cors": "^2.8.5",
+    "dotenv": "^17.2.1",
+    "express": "^4.18.2",
+    "express-rate-limit": "^6.7.0",
+    "express-session": "^1.18.2",
     "helmet": "^7.0.0",
-    "express-rate-limit": "^6.7.0"
+    "passport": "^0.7.0",
+    "passport-google-oauth20": "^2.0.0"
   },
   "devDependencies": {
     "nodemon": "^3.0.1"
