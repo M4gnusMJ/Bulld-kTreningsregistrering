@@ -1,0 +1,286 @@
+{
+  "members": [
+    {
+      "id": "1",
+      "name": "Magnus Moldekleiv",
+      "email": "magnusmoldekleivjohansen@gmail.com",
+      "belay": true,
+      "emergency": "12345678",
+      "pr": "V6 / Orange",
+      "notes": "Entusiastisk nybegynner"
+    }
+  ],
+  "sessions": [
+    {
+      "id": "101",
+      "date": "2025-08-05",
+      "location": "Grip Sluppen",
+      "start": "19:00",
+      "end": "23:00",
+      "discipline": "Bouldering",
+      "capacity": 12,
+      "notes": "Buldring for alle nivåer - forrige uke"
+    },
+    {
+      "id": "102",
+      "date": "2025-08-07",
+      "location": "Grip Sluppen",
+      "start": "19:00",
+      "end": "22:00",
+      "discipline": "Top-rope",
+      "capacity": 10,
+      "notes": "Topptau trening forrige uke"
+    },
+    {
+      "id": "103",
+      "date": "2025-08-09",
+      "location": "Grip City",
+      "start": "18:00",
+      "end": "21:30",
+      "discipline": "Competition Training",
+      "capacity": 8,
+      "notes": "Konkurransetrening - teknikk fokus"
+    },
+    {
+      "id": "104",
+      "date": "2025-08-10",
+      "location": "Grip Sluppen",
+      "start": "10:00",
+      "end": "14:00",
+      "discipline": "Weekend Climb",
+      "capacity": 15,
+      "notes": "Helgetrening - avslappet stemning"
+    },
+    {
+      "id": "105",
+      "date": "2025-08-11",
+      "location": "Grip Sluppen",
+      "start": "19:00",
+      "end": "22:00",
+      "discipline": "Lead",
+      "capacity": 8,
+      "notes": "Ledklatring i går - brattkort påkrevd"
+    },
+    {
+      "id": "106",
+      "date": "2025-08-12",
+      "location": "Grip Sluppen",
+      "start": "19:00",
+      "end": "23:00",
+      "discipline": "Bouldering",
+      "capacity": 12,
+      "notes": "Dagens trening - buldring for alle nivåer!"
+    },
+    {
+      "id": "1",
+      "date": "2025-08-14",
+      "location": "Grip Sluppen",
+      "start": "19:00",
+      "end": "23:00",
+      "discipline": "Bouldering",
+      "capacity": 12,
+      "notes": "Buldring for alle nivåer. Sosialt og gøy!"
+    },
+    {
+      "id": "2",
+      "date": "2025-08-15",
+      "location": "Grip Sluppen",
+      "start": "19:00",
+      "end": "23:00",
+      "discipline": "Top-rope",
+      "capacity": 10,
+      "notes": "Topptau for alle nivåer. Nybegynnere velkomne!"
+    },
+    {
+      "id": "3",
+      "date": "2025-08-16",
+      "location": "Grip Sluppen",
+      "start": "19:00",
+      "end": "22:00",
+      "discipline": "Lead",
+      "capacity": 8,
+      "notes": "Ledklatring - brattkort påkrevd!"
+    },
+    {
+      "id": "4",
+      "date": "2025-08-17",
+      "location": "Sørlandshallen",
+      "start": "17:30",
+      "end": "21:30",
+      "discipline": "Competition Training",
+      "capacity": 10,
+      "notes": "Konkurransetrening - takt og teknikk fokus"
+    },
+    {
+      "id": "5",
+      "date": "2025-08-18",
+      "location": "Preikestolen",
+      "start": "08:00",
+      "end": "18:00",
+      "discipline": "Outdoor Multi-pitch",
+      "capacity": 6,
+      "notes": "Naturklatring - erfaring med flertonelengder påkrevd. Brattkort obligatorisk!"
+    },
+    {
+      "id": "6",
+      "date": "2025-08-19",
+      "location": "Grip City",
+      "start": "19:00",
+      "end": "23:00",
+      "discipline": "Bouldering",
+      "capacity": 20,
+      "notes": "Sosial buldring - pizza og øl etter trening!"
+    },
+    {
+      "id": "7",
+      "date": "2025-08-20",
+      "location": "Grip Sluppen",
+      "start": "18:30",
+      "end": "21:00",
+      "discipline": "Technique Workshop",
+      "capacity": 12,
+      "notes": "Teknikk-workshop med Magnus - flagging og mantling"
+    },
+    {
+      "id": "8",
+      "date": "2025-08-22",
+      "location": "Helleren",
+      "start": "09:00",
+      "end": "16:00",
+      "discipline": "Outdoor Trad",
+      "capacity": 4,
+      "notes": "Tradklatring i Helleren - egen utstyr påkrevd. Kun erfarne klatrere!"
+    },
+    {
+      "id": "9",
+      "date": "2025-08-24",
+      "location": "Grip Sluppen",
+      "start": "12:00",
+      "end": "16:00",
+      "discipline": "Family Day",
+      "capacity": 25,
+      "notes": "Familieklubbing - barn og voksne klatrer sammen!"
+    },
+    {
+      "id": "10",
+      "date": "2025-08-26",
+      "location": "Grip Sluppen",
+      "start": "19:00",
+      "end": "22:00",
+      "discipline": "Lead",
+      "capacity": 10,
+      "notes": "Intensiv ledtrening - toppanker og fall-øvelser"
+    },
+    {
+      "id": "11",
+      "date": "2025-08-27",
+      "location": "Stavanger Klatreklub",
+      "start": "18:00",
+      "end": "22:00",
+      "discipline": "Cross Training",
+      "capacity": 12,
+      "notes": "Gjestetrening hos SKK - annen hall, nye utfordringer!"
+    },
+    {
+      "id": "12",
+      "date": "2025-08-29",
+      "location": "Grip Sluppen",
+      "start": "10:00",
+      "end": "14:00",
+      "discipline": "Youth Training",
+      "capacity": 15,
+      "notes": "Ungdomstrening - åpent for alle under 18 år"
+    }
+  ],
+  "registrations": {
+    "1": [
+      "1",
+      "2"
+    ],
+    "2": [
+      "1",
+      "3",
+      "4"
+    ],
+    "3": [
+      "2"
+    ],
+    "101": [
+      "1",
+      "2",
+      "3",
+      "4"
+    ],
+    "102": [
+      "1",
+      "2",
+      "3"
+    ],
+    "103": [
+      "1",
+      "2",
+      "4"
+    ],
+    "104": [
+      "1",
+      "2",
+      "3",
+      "4"
+    ],
+    "105": [
+      "1",
+      "4"
+    ],
+    "106": [
+      "1",
+      "2",
+      "3"
+    ]
+  },
+  "attendance": {
+    "1": {
+      "1": false,
+      "2": true
+    },
+    "2": {
+      "1": true,
+      "3": true,
+      "4": true
+    },
+    "3": {
+      "2": true
+    },
+    "101": {
+      "1": false,
+      "2": true,
+      "3": false,
+      "4": true
+    },
+    "102": {
+      "1": true,
+      "2": false,
+      "3": true
+    },
+    "103": {
+      "1": true,
+      "2": true,
+      "4": true
+    },
+    "104": {
+      "1": true,
+      "2": true,
+      "3": true,
+      "4": false
+    },
+    "105": {
+      "1": true,
+      "4": true
+    },
+    "106": {
+      "1": false,
+      "2": true,
+      "3": true
+    }
+  },
+  "_seq": 13
+}
