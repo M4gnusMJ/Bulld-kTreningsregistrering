@@ -591,24 +591,32 @@
           // Logout
           window.location.href = '/auth/logout';
         } else {
-          // For development, show test login options
-          const testEmails = [
-            'magnus@example.com',
-            'anna@example.com',
-            'erik@example.com',
-            'lisa@example.com'
-          ];
+          // Check if we're in development mode (localhost)
+          const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
           
-          const email = prompt(
-            'DEVELOPMENT MODE: Choose test email to login as:\n\n' +
-            testEmails.map((e, i) => `${i + 1}. ${e}`).join('\n') +
-            '\n\nEnter email address:'
-          );
-          
-          if (email && testEmails.includes(email)) {
-            window.location.href = `/auth/test-login/${encodeURIComponent(email)}`;
-          } else if (email) {
-            alert('❌ Test email not found. Please use one of the provided test emails.');
+          if (isLocalhost) {
+            // For development, show test login options
+            const testEmails = [
+              'magnusmoldekleivjohansen@gmail.com',
+              'anna@example.com',
+              'erik@example.com',
+              'lisa@example.com'
+            ];
+            
+            const email = prompt(
+              'DEVELOPMENT MODE: Choose test email to login as:\n\n' +
+              testEmails.map((e, i) => `${i + 1}. ${e}`).join('\n') +
+              '\n\nEnter email address:'
+            );
+            
+            if (email && testEmails.includes(email)) {
+              window.location.href = `/auth/test-login/${encodeURIComponent(email)}`;
+            } else if (email) {
+              alert('❌ Test email not found. Please use one of the provided test emails.');
+            }
+          } else {
+            // Production - use real Google OAuth
+            window.location.href = '/auth/google';
           }
         }
       });
