@@ -72,7 +72,9 @@ passport.deserializeUser(async (id, done) => {
 passport.use(new GoogleStrategy({
   clientID: GOOGLE_CLIENT_ID,
   clientSecret: GOOGLE_CLIENT_SECRET,
-  callbackURL: "/auth/google/callback"
+  callbackURL: process.env.NODE_ENV === 'production' 
+    ? "https://bulldoktreningsregistrering-fkdhf6hpatcwgeb7.germanywestcentral-01.azurewebsites.net/auth/google/callback"
+    : "/auth/google/callback"
 }, async (accessToken, refreshToken, profile, done) => {
   try {
     const data = await readData();
