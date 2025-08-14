@@ -2,5 +2,7 @@
     "appService.zipIgnorePattern": [
         "node_modules{,/**}",
         ".vscode{,/**}"
-    ]
+    ],
+    "appService.defaultWebAppToDeploy": "/subscriptions/6a5246af-cf6c-4042-862a-ec5bf7689cf8/resourceGroups/BulldøkTreningsregistrering_group/providers/Microsoft.Web/sites/BulldøkTreningsregistrering",
+    "appService.deploySubpath": "."
 }
