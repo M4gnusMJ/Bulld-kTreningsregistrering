@@ -1288,7 +1288,7 @@
       });
 
       // Admin functionality
-      const adminPassword = 'bulldok2025';
+      const adminPassword = process.env.ADMIN_PASSWORD || 'change-this-password-in-production';
       let isAdminLoggedIn = false;
 
       function checkAdminStatus() {
