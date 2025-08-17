@@ -87,7 +87,7 @@ The application now uses a server-side JSON file database instead of localStorag
 
 ## Admin Access
 
-Default admin password: `bulldok2025`
+Admin password must be declared as an environment variable when deoplying.
 
 **⚠️ IMPORTANT**: Change this password in `public/app.js` before deploying to production!
 
